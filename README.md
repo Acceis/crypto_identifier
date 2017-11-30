@@ -35,8 +35,8 @@ optional arguments:
   --key KEY, -k KEY     key string
   --keys KEYS, -ks KEYS
                         keys file
-  --printable, -p       diplay only printable results
-  --grep GREP, -g GREP  diplay only printable results
+  --printable, -p       display only printable results
+  --grep GREP, -g GREP  grep string in results
   --algo {ARC4,CAST,AES,XOR,ARC2,DES,Blowfish,DES3}, -a {ARC4,CAST,AES,XOR,ARC2,DES,Blowfish,DES3}
                         cipher algo to use
   --mode {ECB,CBC,CFB,OFB,OPENPGP}, -m {ECB,CBC,CFB,OFB,OPENPGP}

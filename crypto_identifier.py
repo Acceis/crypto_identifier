@@ -181,11 +181,11 @@ if __name__ == "__main__":
                         help='keys file')
     parser.add_argument('--printable',
                         '-p',
-                        help='diplay only printable results',
+                        help='display only printable results',
                         action='store_true')
     parser.add_argument('--grep',
                         '-g',
-                        help='diplay only printable results')
+                        help='grep string in results')
     parser.add_argument('--algo',
                         '-a',
                         help='cipher algo to use',
