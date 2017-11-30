@@ -1,7 +1,7 @@
 # crypto-identifier
 
 Crypto tool for pentest and ctf : try to uncipher data using multiple algorithms and block chaining modes.
-Usefull for a quick check on unknown cipher text and key dictionnary
+Usefull for a quick check on unknown cipher text and key dictionary
 
 Supported Algorithms :
  - AES
@@ -97,7 +97,7 @@ DESCipher (ECB) : secret (with IV): 'This is a DES test case\x00'
 DESCipher (ECB) : secret : 'This is a DES test case\x00'
 ```
 
-### using a dictionnary as keys
+### using a dictionary as keys
 `python ./crypto_identifier.py --input "WpbizgqtUDjD5TV5ELVswFL92ao3T41T" --keys ./500-worst-passwords.txt --printable`
 
 ```
