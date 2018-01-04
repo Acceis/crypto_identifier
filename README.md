@@ -18,7 +18,6 @@ Supported modes :
  - CBC
  - CFB
  - OFB
- - OPENPGP
 
 ## Usage:
 ```
