@@ -31,8 +31,7 @@ CIPHER_LIST = {"AES": {"algo": AES, "type": "block"},
 MODES = {blockalgo.MODE_ECB: "ECB",
          blockalgo.MODE_CBC: "CBC",
          blockalgo.MODE_CFB: "CFB",
-         blockalgo.MODE_OFB: "OFB",
-         blockalgo.MODE_OPENPGP: "OPENPGP"}
+         blockalgo.MODE_OFB: "OFB"}
 
 CHARSET = string.ascii_letters + string.digits + string.punctuation
 NON_CHARSET = ''.join(chr(i) for i in range(256) if chr(i) not in CHARSET)
@@ -77,13 +76,32 @@ class BlockCipher():
         """ Return decrypted value of cipher with key
         """
         self.key = self.set_key_length(key)
+        plain = None
         if not iv:
-            algo = self.algo.new(self.key, self.mode)
-            return algo.decrypt(cipher)
+            try :
+                algo = self.algo.new(self.key, self.mode)
+                plain = algo.decrypt(cipher)
+            except ValueError, e:
+                """ Some modes needs IV (like CBC)
+                    We add "\x00" * block length in this case
+                """
+                iv = "\x00" * self.algo.block_size
+                algo = self.algo.new(self.key, self.mode, IV=iv)
+                plain = algo.decrypt(cipher)
         else:
+            if len(cipher) >= self.algo.block_size * 2:
+                iv = cipher[:self.algo.block_size]
+                cipher = cipher[self.algo.block_size:]
+            else:
+                iv = "\x00" * self.algo.block_size
             algo = self.algo.new(self.key, self.mode,
-                                 IV=cipher[:self.algo.block_size])
-            return algo.decrypt(cipher)
+                                 IV=iv)
+            plain = algo.decrypt(cipher)
+
+        if all([(_ == plain[-1]) for _ in plain[-1 * ord(plain[-1]):]]):
+            plain = self.unpad(plain)
+
+        return plain
 
     def set_key_length(self, key):
         """ Adjust key length to cipher restrictions by padding with \0
@@ -99,6 +117,7 @@ class BlockCipher():
         """ Return a printable information string about cipher
         """
         name = dir(self.algo)[0]
+        # Fix notation from pycrypto lib
         name = name if name is not "MODE_CBC" else "ARC2"
         return "%s (%s)" % (name, MODES[self.mode])
 
@@ -109,7 +128,7 @@ class StreamCipher():
         """
         self.algo = algo
 
-    def encrypt(self, key, plain):
+    def encrypt(self, plain, key):
         """ Return encrypted value of cipher with key
         """
         key = self.set_key_length(key)
@@ -119,6 +138,8 @@ class StreamCipher():
     def decrypt(self, cipher, key, iv=False):
         """ Return decrypted value of cipher with key
         """
+        if iv:
+            raise ValueError
         key = self.set_key_length(key)
         algo = self.algo.new(key)
         return algo.decrypt(cipher)
@@ -151,16 +172,10 @@ def loop_algos():
 
 
 def get_printable(text):
-    """ Return string if a ascii word of len >= len(text)/2 match
-        if not, return None
+    """ Return string if printable, else None
     """
-    limit = len(text) / 2
-
-    pattern = re.compile(b'[^\x00-\x1F\x7F-\xFF]{%d,}' % limit)
-    r = pattern.findall(text)
-
-    if len(r) > 0:
-        return r[0].decode("UTF-8")
+    if all(c in string.printable for c in text):
+        return text
     else:
         return None
 
@@ -183,9 +198,6 @@ if __name__ == "__main__":
                         '-p',
                         help='display only printable results',
                         action='store_true')
-    parser.add_argument('--grep',
-                        '-g',
-                        help='grep string in results')
     parser.add_argument('--algo',
                         '-a',
                         help='cipher algo to use',
@@ -230,35 +242,21 @@ if __name__ == "__main__":
             iv_str = "(with IV)" if iv else ""
             for algo in loop_algos():
                 try:
-                    result = algo.decrypt(input_text, key, iv)
+                    result = algo.decrypt(cipher=input_text, key=key, iv=iv)
                     if args.printable:
                         result = get_printable(result)
                         if result is not None:
-                            if args.grep:
-                                if args.grep in result:
-                                    print("%s : %s %s: %s" % (algo,
-                                                              key,
-                                                              iv_str,
-                                                              result))
-                            else:
-                                print("%s : %s %s: %s" % (algo,
-                                                          key,
-                                                          iv_str,
-                                                          result))
+                            print("%s : %s %s: %s" % (algo,
+                                                      key,
+                                                      iv_str,
+                                                      result))
                     else:
                         if result != '':
-                            if args.grep:
-                                if args.grep in result:
-                                    print("%s : %s %s: %s" % (algo,
-                                                              key,
-                                                              iv_str,
-                                                              repr(result)))
-                            else:
-                                print("%s : %s %s: %s" % (algo,
+                            print("%s : %s %s: %s" % (algo,
                                                           key,
                                                           iv_str,
                                                           repr(result)))
-                except Exception as e:
+                except Exception, e:
                     """ Silently pass all cipher errors like keys limits
                         and non-compatible algo/modes
                     """
