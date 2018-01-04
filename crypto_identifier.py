@@ -81,7 +81,7 @@ class BlockCipher():
             try :
                 algo = self.algo.new(self.key, self.mode)
                 plain = algo.decrypt(cipher)
-            except ValueError, e:
+            except ValueError as e:
                 """ Some modes needs IV (like CBC)
                     We add "\x00" * block length in this case
                 """
@@ -98,7 +98,13 @@ class BlockCipher():
                                  IV=iv)
             plain = algo.decrypt(cipher)
 
-        if all([(_ == plain[-1]) for _ in plain[-1 * ord(plain[-1]):]]):
+        try:
+            last_char = ord(plain[-1])
+        except TypeError:
+            #Python3.x
+            last_char = plain[-1]
+
+        if all([(_ == plain[-1]) for _ in plain[-1 * last_char:]]):
             plain = self.unpad(plain)
 
         return plain
@@ -256,7 +262,7 @@ if __name__ == "__main__":
                                                           key,
                                                           iv_str,
                                                           repr(result)))
-                except Exception, e:
+                except Exception as e:
                     """ Silently pass all cipher errors like keys limits
                         and non-compatible algo/modes
                     """
