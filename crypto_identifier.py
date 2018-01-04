@@ -180,10 +180,14 @@ def loop_algos():
 def get_printable(text):
     """ Return string if printable, else None
     """
-    if all(c in string.printable for c in text):
-        return text
-    else:
-        return None
+    try:
+        if all(c in string.printable for c in text):
+            return text
+    except TypeError:
+        if all(chr(c) in string.printable for c in text):
+            return text
+    
+    return None
 
 
 if __name__ == "__main__":
