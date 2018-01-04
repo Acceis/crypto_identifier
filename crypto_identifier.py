@@ -107,7 +107,7 @@ class BlockCipher():
         if all([(_ == plain[-1]) for _ in plain[-1 * last_char:]]):
             plain = self.unpad(plain)
 
-        return plain.rstrip('\x00')
+        return plain.rstrip(b'\x00')
 
     def set_key_length(self, key):
         """ Adjust key length to cipher restrictions by padding with \0
@@ -148,7 +148,7 @@ class StreamCipher():
             raise ValueError
         key = self.set_key_length(key)
         algo = self.algo.new(key)
-        return algo.decrypt(cipher).rstrip('\x00')
+        return algo.decrypt(cipher).rstrip(b'\x00')
 
     def set_key_length(self, key):
         """ Adjust key length to cipher restrictions by padding with \0
